@@ -1,0 +1,5 @@
+Style the navbar to always be at top of the page, bc its ugly where it is
+Content addition - obs
+Bookshelf scanner - scan barcodes or enter them manually through text. there might be an API for this (Research)
+Dashboard functionality - this will come last
+Bookshelf and wishlist need to have the ability to store data is JSON to avoid having to use a DB.
