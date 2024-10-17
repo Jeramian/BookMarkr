@@ -1,9 +1,9 @@
-import WishList from '../components/wishList';
+import BookShelf from '../components/bookShelf';
 
 export default function Bookshelf() {
   return (
     <div>
-      <WishList />
+      <BookShelf />
     </div>
   )
 }
