@@ -20,8 +20,6 @@ const NavBar = () => {
                   <Link href="/bookShelf">Book Shelf</Link>
                 </li>
               </ul>
-              <div className="hidden xl:flex items-center space-x-5 items-center">
-              </div>
             </div>
           </nav>
         </section>
