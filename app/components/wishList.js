@@ -11,7 +11,7 @@ const WishList = () => {
 
     return (
         <div className="container mx-auto px-4">
-            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>Caitlin's Book Wish List</h2>
+            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>Caitlin&apos;s Book Wish List</h2>
             <ul className="mt-6 space-y-4">
                 {wish.length > 0 ? (
                     wish.map((book, index) => (

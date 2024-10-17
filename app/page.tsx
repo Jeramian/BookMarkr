@@ -30,7 +30,7 @@ export default function Home() {
           <h2 className="text-xl font-semibold text-gray-700">Current Book You Are Reading</h2>
           <div className="text-4xl font-bold text-pink-300 pt-5">
             {/* Replace with actual current book title */}
-            "The Great Gatsby"
+            &quot;The Great Gatsby&quot;
           </div>
         </div>
       </div>
