@@ -7,6 +7,7 @@ const BookSearch = () => {
     const [books, setBooks] = useState([]);
     const [shelf, setShelf] = useState([]);
     const [wish, setWish] = useState([]);
+    const [message, setMessage] = useState(null); // For feedback messages
 
     useEffect(() => {
         const savedShelf = JSON.parse(localStorage.getItem('bookshelf')) || [];
@@ -23,22 +24,77 @@ const BookSearch = () => {
         console.log(results);
     };
 
-    const addToShelf = (book) => {
+    const addToShelf = async (book) => {
         const updatedShelf = [...shelf, book];
         setShelf(updatedShelf);
         localStorage.setItem('bookshelf', JSON.stringify(updatedShelf));
         console.log('Book added to shelf:', book);
+
+        // Send the book to Google Sheets
+        await addBookToSheet(book);
     };
 
-    const addToWishList = (book) => {
-      const updatedWish = [...wish, book];
-      setWish(updatedWish);
-      localStorage.setItem('wishList', JSON.stringify(updatedWish));
-      console.log('Book added to wishlist', book)
+    const addToWishList = async (book) => {
+        const updatedWish = [...wish, book];
+        setWish(updatedWish);
+        localStorage.setItem('wishList', JSON.stringify(updatedWish));
+        console.log('Book added to wishlist:', book);
+
+        // Optionally send the book to Google Sheets if needed
+        await addBooktoWishSheet(book);
+    };
+
+    const addBooktoWishSheet = async (bool) => {
+      try {
+        const response = await fetch('/api/addBookWish', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ book }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add book to Google Sheets');
+        }
+
+        const data = await response.json();
+        setMessage(data.message || 'Book added to Google Sheets successfully!');
+    } catch (error) {
+        console.error('Error adding book:', error);
+        setMessage('Failed to add book to Google Sheets.');
     }
+    }
+
+    const addBookToSheet = async (book) => {
+        try {
+            const response = await fetch('/api/addBook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ book }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to add book to Google Sheets');
+            }
+
+            const data = await response.json();
+            setMessage(data.message || 'Book added to Google Sheets successfully!');
+        } catch (error) {
+            console.error('Error adding book:', error);
+            setMessage('Failed to add book to Google Sheets.');
+        }
+    };
 
     return (
         <div>
+            {message && (
+                <div className="text-center mt-4">
+                    <p className="text-red-500">{message}</p>
+                </div>
+            )}
             <input
                 type="text"
                 value={query}
@@ -53,27 +109,27 @@ const BookSearch = () => {
             <div className="mt-4">
                 {books.length > 0 ? (
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {books.map((book) => (
-                      <li key={book.id} className="bg-white border rounded-lg shadow-md p-4 transition-transform transform hover:scale-105">
-                        <h3 className="font-bold text-lg text-pink-300">{book.volumeInfo.title}</h3>
-                        <p className="text-gray-700">{book.volumeInfo.authors?.join(', ')}</p>
-                        <div className="mt-4">
-                          <button 
-                            onClick={() => addToShelf(book)} 
-                            className="bg-pink-300 text-white rounded p-2 hover:bg-pink-400 transition duration-200"
-                          >
-                            Add to Book Shelf
-                          </button>
-                          <button 
-                            onClick={() => addToWishList(book)} 
-                            className="ml-2 bg-pink-300 text-white rounded p-2 hover:bg-pink-400 transition duration-200"
-                            >
-                            Add to Wishlist
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                        {books.map((book) => (
+                            <li key={book.id} className="bg-white border rounded-lg shadow-md p-4 transition-transform transform hover:scale-105">
+                                <h3 className="font-bold text-lg text-pink-300">{book.volumeInfo.title}</h3>
+                                <p className="text-gray-700">{book.volumeInfo.authors?.join(', ')}</p>
+                                <div className="mt-4">
+                                    <button 
+                                        onClick={() => addToShelf(book)} 
+                                        className="bg-pink-300 text-white rounded p-2 hover:bg-pink-400 transition duration-200"
+                                    >
+                                        Add to Book Shelf
+                                    </button>
+                                    <button 
+                                        onClick={() => addToWishList(book)} 
+                                        className="ml-2 bg-pink-300 text-white rounded p-2 hover:bg-pink-400 transition duration-200"
+                                    >
+                                        Add to Wishlist
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                 ) : (
                     <p></p>
                 )}

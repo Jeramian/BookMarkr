@@ -3,38 +3,60 @@ import React, { useEffect, useState } from 'react';
 
 const BookShelf = () => {
     const [shelf, setShelf] = useState([]);
-    const [currentBook, setCurrentBook] = useState(null);
+    const [message, setMessage] = useState(null); // For feedback messages
 
+    // Fetch books from Google Sheet on component mount
     useEffect(() => {
-        const savedShelf = JSON.parse(localStorage.getItem('bookshelf')) || [];
-        setShelf(savedShelf);
+        const fetchBooks = async () => {
+            try {
+                const response = await fetch('/api/getBooks'); // Endpoint to fetch books from the Google Sheet
+                if (!response.ok) {
+                    throw new Error('Failed to fetch books');
+                }
+                const data = await response.json();
+                setShelf(data.books); // Assuming data.books is the array of books
+            } catch (error) {
+                console.error('Error fetching books:', error);
+                setMessage('Failed to load books.');
+            }
+        };
 
-        const savedCurrentBook = localStorage.getItem('currentBook');
-        if (savedCurrentBook) {
-            setCurrentBook(JSON.parse(savedCurrentBook));
-        }
+        fetchBooks();
     }, []);
 
-    const removeFromShelf = (bookId) => {
-        const updatedShelf = shelf.filter(book => book.id !== bookId);
-        setShelf(updatedShelf);
-        localStorage.setItem('bookshelf', JSON.stringify(updatedShelf));
-        console.log('Book removed from shelf:', bookId);
-    };
-
-    const setAsCurrentBook = (book) => {
-        setCurrentBook(book);
-        localStorage.setItem('currentBook', JSON.stringify(book));
-        console.log('Current book set to:', book.volumeInfo.title);
+    const removeBookFromSheet = async (bookId) => {
+        try {
+            const response = await fetch('/api/removeBook', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bookId }),
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error response:', errorData);
+                throw new Error('Failed to remove book from sheet');
+            }
+    
+            const data = await response.json();
+            console.log('Remove response:', data); // Log the successful response
+            setMessage(data.message || 'Book removed successfully!');
+            // Update the local shelf state
+            setShelf(prevShelf => prevShelf.filter(book => book.id !== bookId));
+        } catch (error) {
+            console.error('Error removing book:', error);
+            setMessage('Failed to remove book from the sheet.');
+        }
     };
 
     return (
         <div className="container mx-auto px-4">
             <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>Caitlin&apos;s Book Shelf</h2>
-            {currentBook && (
+            {message && (
                 <div className="text-center mt-4">
-                    <h3 className="text-lg font-semibold text-pink-300">Currently Reading:</h3>
-                    <p className="text-gray-700">{currentBook.volumeInfo.title}</p>
+                    <p className="text-red-500">{message}</p>
                 </div>
             )}
             <ul className="mt-6 space-y-4">
@@ -47,16 +69,10 @@ const BookShelf = () => {
                             <p className="text-gray-600">Genre: {book.volumeInfo.categories?.join(', ') || 'N/A'}</p>
                             <div className="mt-4 flex space-x-2">
                                 <button 
-                                    onClick={() => removeFromShelf(book.id)} 
+                                    onClick={() => removeBookFromSheet(book.id)} // Call the API to remove from sheet
                                     className="bg-red-300 text-white rounded p-2 hover:bg-red-400 transition duration-200"
                                 >
                                     Remove from Shelf
-                                </button>
-                                <button 
-                                    onClick={() => setAsCurrentBook(book)} 
-                                    className="bg-green-300 text-white rounded p-2 hover:bg-green-400 transition duration-200"
-                                >
-                                    Set as Current Book
                                 </button>
                             </div>
                         </li>
