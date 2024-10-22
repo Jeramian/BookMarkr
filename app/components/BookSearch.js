@@ -44,7 +44,7 @@ const BookSearch = () => {
         await addBooktoWishSheet(book);
     };
 
-    const addBooktoWishSheet = async (bool) => {
+    const addBooktoWishSheet = async (book) => {
       try {
         const response = await fetch('/api/addBookWish', {
             method: 'POST',

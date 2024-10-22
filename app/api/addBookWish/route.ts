@@ -40,7 +40,7 @@ export const POST = async (request: Request) => {
             spreadsheetId: SHEET_ID as string,
             range,
             valueInputOption,
-            requestBody: resource, // Use requestBody instead of resource
+            requestBody: resource,
         });
 
         return NextResponse.json({ message: 'Book added successfully!', response });

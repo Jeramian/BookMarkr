@@ -22,7 +22,7 @@ export const DELETE = async (request: Request) => {
         // Step 1: Retrieve all rows
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID as string,
-            range: 'wishlist!A:G', // Adjust the range if needed
+            range: 'wishlist!A:G',
         });
 
         const rows = response.data.values;
@@ -37,12 +37,12 @@ export const DELETE = async (request: Request) => {
         const rowIndex = rows.findIndex(row => row[4] === bookId); // 4 is the index for book ID
 
         if (rowIndex === -1) {
-            return NextResponse.json({ message: 'Book not found in the sheet.' }, { status: 404 }); 
-        }   
+            return NextResponse.json({ message: 'Book not found in the sheet.' }, { status: 404 });
+        }
 
         // Calculate the indices correctly
-        const startIndex = rowIndex; // If rowIndex is 5 for row 7 in sheet
-        const endIndex = startIndex + 1;  // Deleting one row
+        const startIndex = rowIndex;
+        const endIndex = startIndex + 1;
 
         console.log(`Attempting to delete rows from ${startIndex} to ${endIndex}`);
 
@@ -57,7 +57,7 @@ export const DELETE = async (request: Request) => {
                                 sheetId: 1046370208, // Ensure this is the correct sheet ID
                                 dimension: 'ROWS',
                                 startIndex: startIndex,
-                                endIndex: endIndex, // This should be startIndex + 1 for a single row
+                                endIndex: endIndex,
                             },
                         },
                     },
@@ -75,6 +75,10 @@ export const DELETE = async (request: Request) => {
         return NextResponse.json({ message: 'Book removed successfully!' });
     } catch (error) {
         console.error('Error removing book from Google Sheets:', error);
-        return NextResponse.json({ message: 'Failed to remove book from Google Sheets.' }, { status: 500 });
+
+        // Handle the error to avoid the "unknown" type issue
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        
+        return NextResponse.json({ message: 'Failed to remove book from Google Sheets.', error: errorMessage }, { status: 500 });
     }
 };

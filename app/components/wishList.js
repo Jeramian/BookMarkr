@@ -11,10 +11,12 @@ const WishList = () => {
             try {
                 const response = await fetch('/api/getBooksWish'); // Endpoint to fetch books from the Google Sheet
                 if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error fetching books:', errorData);
                     throw new Error('Failed to fetch books');
                 }
                 const data = await response.json();
-                setShelf(data.books); // Assuming data.books is the array of books
+                setShelf(data.books || []); // Ensure it's an array
             } catch (error) {
                 console.error('Error fetching books:', error);
                 setMessage('Failed to load books.');
@@ -33,13 +35,13 @@ const WishList = () => {
                 },
                 body: JSON.stringify({ bookId }),
             });
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Error response:', errorData);
-                throw new Error('Failed to remove book from sheet');
+                console.error('Error response from server:', errorData);
+                throw new Error(errorData.message || 'Failed to remove book from sheet');
             }
-    
+
             const data = await response.json();
             console.log('Remove response:', data); // Log the successful response
             setMessage(data.message || 'Book removed successfully!');

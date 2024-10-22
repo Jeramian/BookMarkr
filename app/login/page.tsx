@@ -39,7 +39,7 @@ const Login = () => {
           required
           className="border p-2 mb-4 w-full"
         />
-        <button type="submit" className="bg-blue-500 text-white py-2 w-full">
+        <button type="submit" className="bg-pink-300 text-white py-2 w-full">
           Login
         </button>
       </form>
