@@ -1,13 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { fetchBooks } from '../lib/googleBooksApi';
+import { toast } from 'react-hot-toast';
 
 const BookSearch = () => {
     const [query, setQuery] = useState('');
     const [books, setBooks] = useState([]);
     const [shelf, setShelf] = useState([]);
     const [wish, setWish] = useState([]);
-    const [message, setMessage] = useState(null); // For feedback messages
+    const [message, setMessage] = useState(null);
 
     useEffect(() => {
         const savedShelf = JSON.parse(localStorage.getItem('bookshelf')) || [];
@@ -25,20 +26,27 @@ const BookSearch = () => {
     };
 
     const addToShelf = async (book) => {
-        const updatedShelf = [...shelf, book];
-        setShelf(updatedShelf);
-        localStorage.setItem('bookshelf', JSON.stringify(updatedShelf));
-        console.log('Book added to shelf:', book);
+      const updatedShelf = [...shelf, book];
+      setShelf(updatedShelf);
+      localStorage.setItem('bookshelfData', JSON.stringify(updatedShelf));
+      console.log('Book added to shelf:', book);
+  
+      // Send the book to Google Sheets
+      await addBookToSheet(book);
+      
+      // Trigger the shelfUpdated event
+      window.dispatchEvent(new Event('shelfUpdated'));
+  };
 
-        // Send the book to Google Sheets
-        await addBookToSheet(book);
-    };
-
+  
     const addToWishList = async (book) => {
         const updatedWish = [...wish, book];
         setWish(updatedWish);
         localStorage.setItem('wishList', JSON.stringify(updatedWish));
         console.log('Book added to wishlist:', book);
+
+        // Emit event to update other components
+        window.dispatchEvent(new Event('wishUpdated'));
 
         // Optionally send the book to Google Sheets if needed
         await addBooktoWishSheet(book);
@@ -59,10 +67,10 @@ const BookSearch = () => {
         }
 
         const data = await response.json();
-        setMessage(data.message || 'Book added to Google Sheets successfully!');
+        toast.success(setMessage(data.message || 'Book added to Google Sheets successfully!'));
     } catch (error) {
         console.error('Error adding book:', error);
-        setMessage('Failed to add book to Google Sheets.');
+        toast.error(setMessage('Failed to add book to Google Sheets.'));
     }
     }
 
@@ -81,20 +89,15 @@ const BookSearch = () => {
             }
 
             const data = await response.json();
-            setMessage(data.message || 'Book added to Google Sheets successfully!');
+            toast.success(setMessage(data.message || 'Book added to Google Sheets successfully!'));
         } catch (error) {
             console.error('Error adding book:', error);
-            setMessage('Failed to add book to Google Sheets.');
+            toast.error(setMessage('Failed to add book to Google Sheets.'));
         }
     };
 
     return (
         <div>
-            {message && (
-                <div className="text-center mt-4">
-                    <p className="text-red-500">{message}</p>
-                </div>
-            )}
             <input
                 type="text"
                 value={query}
@@ -131,7 +134,7 @@ const BookSearch = () => {
                         ))}
                     </ul>
                 ) : (
-                    <p></p>
+                    <p className='pt-3'>Search for a book, Results will be shown here!</p>
                 )}
             </div>
         </div>

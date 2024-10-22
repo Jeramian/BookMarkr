@@ -1,15 +1,15 @@
 "use client"; // Ensure this is at the top
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Use next/navigation for routing
+import { useRouter } from 'next/navigation'; // Adjust based on your Next.js version
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const router = useRouter();
 
-  // Specify the type of the event parameter
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
     // Example login logic
     if (username === 'admin' && password === 'password') {
       localStorage.setItem('user', JSON.stringify({ username }));

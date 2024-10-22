@@ -1,23 +1,23 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 const BookShelf = () => {
     const [shelf, setShelf] = useState([]);
-    const [message, setMessage] = useState(null); // For feedback messages
+    const [message, setMessage] = useState(null);
 
-    // Fetch books from Google Sheet on component mount
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                const response = await fetch('/api/getBooks'); // Endpoint to fetch books from the Google Sheet
+                const response = await fetch('/api/getBooks');
                 if (!response.ok) {
                     throw new Error('Failed to fetch books');
                 }
                 const data = await response.json();
-                setShelf(data.books); // Assuming data.books is the array of books
+                setShelf(data.books || []);
             } catch (error) {
                 console.error('Error fetching books:', error);
-                setMessage('Failed to load books.');
+                toast.error(setMessage('Failed to load books.'));
             }
         };
 
@@ -25,6 +25,11 @@ const BookShelf = () => {
     }, []);
 
     const removeBookFromSheet = async (bookId) => {
+        // Optimistically update the UI first
+        const updatedShelf = shelf.filter(book => book.id !== bookId);
+        setShelf(updatedShelf);
+        localStorage.setItem('bookshelfData', JSON.stringify(updatedShelf));
+
         try {
             const response = await fetch('/api/removeBook', {
                 method: 'DELETE',
@@ -33,21 +38,19 @@ const BookShelf = () => {
                 },
                 body: JSON.stringify({ bookId }),
             });
-    
+
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response:', errorData);
                 throw new Error('Failed to remove book from sheet');
             }
-    
+
             const data = await response.json();
-            console.log('Remove response:', data); // Log the successful response
-            setMessage(data.message || 'Book removed successfully!');
-            // Update the local shelf state
-            setShelf(prevShelf => prevShelf.filter(book => book.id !== bookId));
+            toast.success(data.message || 'Book removed!');
         } catch (error) {
             console.error('Error removing book:', error);
-            setMessage('Failed to remove book from the sheet.');
+            // If the removal failed, add the book back to the shelf
+            setShelf(prevShelf => [...prevShelf, shelf.find(book => book.id === bookId)]);
+            localStorage.setItem('bookshelfData', JSON.stringify(shelf)); // Restore local storage
+            toast.error(setMessage('Failed to remove book from the sheet. Restored to shelf.'));
         }
     };
 
@@ -69,7 +72,7 @@ const BookShelf = () => {
                             <p className="text-gray-600">Genre: {book.volumeInfo.categories?.join(', ') || 'N/A'}</p>
                             <div className="mt-4 flex space-x-2">
                                 <button 
-                                    onClick={() => removeBookFromSheet(book.id)} // Call the API to remove from sheet
+                                    onClick={() => removeBookFromSheet(book.id)}
                                     className="bg-red-300 text-white rounded p-2 hover:bg-red-400 transition duration-200"
                                 >
                                     Remove from Shelf

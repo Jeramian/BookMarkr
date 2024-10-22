@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 const WishList = () => {
     const [shelf, setShelf] = useState([]);
@@ -10,42 +11,46 @@ const WishList = () => {
             try {
                 const response = await fetch('/api/getBooksWish');
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('Error fetching books:', errorData);
                     throw new Error('Failed to fetch books');
                 }
                 const data = await response.json();
                 setShelf(data.books || []);
             } catch (error) {
                 console.error('Error fetching books:', error);
-                setMessage('Failed to load books.');
+                toast.error(setMessage('Failed to load books.'))
             }
         };
 
         fetchBooks();
     }, []);
 
-    const removefromWishSheet = async (bookId) => {
+    const removeFromWishSheet = async (bookId) => {
+        const updatedShelf = shelf.filter(book => book.id !== bookId);
+        setShelf(updatedShelf);
+        localStorage.setItem('wishlistData', JSON.stringify(updatedShelf));
+
         try {
-            const response = await fetch('/api/removeBookWish', {
+            const response = await fetch('/api/removeBookWIsh', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ bookId }),
             });
-    
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to remove book from sheet');
+                throw new Error('Failed to remove book from sheet');
             }
-    
+
             const data = await response.json();
-            setMessage(data.message || 'Book removed successfully!');
-            setShelf(prevShelf => prevShelf.filter(book => book.id !== bookId));
+            toast.success(data.message || 'Book removed!');
+
         } catch (error) {
             console.error('Error removing book:', error);
-            setMessage('Failed to remove book from the sheet.');
+            // If the removal failed, add the book back to the shelf
+            setShelf(prevShelf => [...prevShelf, shelf.find(book => book.id === bookId)]);
+            localStorage.setItem('wishlistData', JSON.stringify(shelf)); // Restore local storage
+            toast.error(setMessage('Failed to remove book from the sheet. Restored to wish list.'));
         }
     };
 
@@ -67,7 +72,7 @@ const WishList = () => {
                             <p className="text-gray-600">Genre: {book.volumeInfo.categories?.join(', ') || 'N/A'}</p>
                             <div className="mt-4 flex space-x-2">
                                 <button 
-                                    onClick={() => removefromWishSheet(book.id)}
+                                    onClick={() => removeFromWishSheet(book.id)}
                                     className="bg-red-300 text-white rounded p-2 hover:bg-red-400 transition duration-200"
                                 >
                                     Remove from Wishlist
