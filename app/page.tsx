@@ -1,8 +1,9 @@
-"use client"
+"use client"; // Ensure this is at the top
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // Use next/navigation for routing
 import BookSearch from './components/BookSearch';
-import TotalPages from './components/totalPages';
-import TotalBooks from './components/totalBooks';
+import TotalPages from './components/TotalPages';
+import TotalBooks from './components/TotalBooks';
 
 interface Book {
     id: string;
@@ -16,17 +17,24 @@ interface Book {
 
 export default function Home() {
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const savedCurrentBook = localStorage.getItem('currentBook');
-    if (savedCurrentBook) {
-      setCurrentBook(JSON.parse(savedCurrentBook));
+    const user = localStorage.getItem('user');
+
+    if (!user) {
+      router.push('/login'); // Redirect to login if not authenticated
+    } else {
+      if (savedCurrentBook) {
+        setCurrentBook(JSON.parse(savedCurrentBook));
+      }
     }
-  }, []);
+  }, [router]);
 
   return (
     <div className='container mx-auto px-4 text-center'>
-      <h1 className='text-3xl font-bold pt-5 pb-5 text-gray-800'>Welcome Back, Caitlin!</h1>
+      <h1 className='text-3xl font-bold pt-5 pb-5 text-gray-800'>Welcome Back!</h1>
       <BookSearch />
       
       <div className="flex justify-center mt-10 space-x-6">
