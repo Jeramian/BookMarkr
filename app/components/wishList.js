@@ -3,20 +3,19 @@ import React, { useEffect, useState } from 'react';
 
 const WishList = () => {
     const [shelf, setShelf] = useState([]);
-    const [message, setMessage] = useState(null); // For feedback messages
+    const [message, setMessage] = useState(null);
 
-    // Fetch books from Google Sheet on component mount
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                const response = await fetch('/api/getBooksWish'); // Endpoint to fetch books from the Google Sheet
+                const response = await fetch('/api/getBooksWish');
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('Error fetching books:', errorData);
                     throw new Error('Failed to fetch books');
                 }
                 const data = await response.json();
-                setShelf(data.books || []); // Ensure it's an array
+                setShelf(data.books || []);
             } catch (error) {
                 console.error('Error fetching books:', error);
                 setMessage('Failed to load books.');
@@ -35,17 +34,14 @@ const WishList = () => {
                 },
                 body: JSON.stringify({ bookId }),
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Error response from server:', errorData);
                 throw new Error(errorData.message || 'Failed to remove book from sheet');
             }
-
+    
             const data = await response.json();
-            console.log('Remove response:', data); // Log the successful response
             setMessage(data.message || 'Book removed successfully!');
-            // Update the local shelf state
             setShelf(prevShelf => prevShelf.filter(book => book.id !== bookId));
         } catch (error) {
             console.error('Error removing book:', error);
@@ -71,7 +67,7 @@ const WishList = () => {
                             <p className="text-gray-600">Genre: {book.volumeInfo.categories?.join(', ') || 'N/A'}</p>
                             <div className="mt-4 flex space-x-2">
                                 <button 
-                                    onClick={() => removefromWishSheet(book.id)} // Call the API to remove from sheet
+                                    onClick={() => removefromWishSheet(book.id)}
                                     className="bg-red-300 text-white rounded p-2 hover:bg-red-400 transition duration-200"
                                 >
                                     Remove from Wishlist
