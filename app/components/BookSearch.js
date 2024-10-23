@@ -10,6 +10,9 @@ const BookSearch = () => {
     const [wish, setWish] = useState([]);
     const [message, setMessage] = useState(null);
 
+    // Get username from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+
     useEffect(() => {
         const savedShelf = JSON.parse(localStorage.getItem('bookshelf')) || [];
         setShelf(savedShelf);
@@ -26,40 +29,53 @@ const BookSearch = () => {
     };
 
     const addToShelf = async (book) => {
-      const updatedShelf = [...shelf, book];
-      setShelf(updatedShelf);
-      localStorage.setItem('bookshelfData', JSON.stringify(updatedShelf));
-      console.log('Book added to shelf:', book);
-  
-      // Send the book to Google Sheets
-      await addBookToSheet(book);
-      
-      // Trigger the shelfUpdated event
-      window.dispatchEvent(new Event('shelfUpdated'));
-  };
+        const updatedShelf = [...shelf, book];
+        setShelf(updatedShelf);
+        localStorage.setItem('bookshelf', JSON.stringify(updatedShelf));
+        console.log('Book added to shelf:', book);
 
-  
-    const addToWishList = async (book) => {
-        const updatedWish = [...wish, book];
-        setWish(updatedWish);
-        localStorage.setItem('wishList', JSON.stringify(updatedWish));
-        console.log('Book added to wishlist:', book);
+        const user = JSON.parse(localStorage.getItem('user'));
+        const username = user ? user.username : null;
 
-        // Emit event to update other components
-        window.dispatchEvent(new Event('wishUpdated'));
-
-        // Optionally send the book to Google Sheets if needed
-        await addBooktoWishSheet(book);
+        if (!username) {
+          toast.error('User not logged in');
+          return;
+      }
+        // Send the book to Google Sheets with the username
+        await addBookToSheet({ book, username });
+        
+        // Trigger the shelfUpdated event
+        window.dispatchEvent(new Event('shelfUpdated'));
     };
 
-    const addBooktoWishSheet = async (book) => {
-      try {
+    const addToWishList = async (book) => {
+      const updatedWish = [...wish, book];
+      setWish(updatedWish);
+      localStorage.setItem('wishList', JSON.stringify(updatedWish));
+      console.log('Book added to wishlist:', book);
+  
+      // Get the username from localStorage
+      const user = JSON.parse(localStorage.getItem('user'));
+      const username = user ? user.username : null;
+  
+      // Check if username exists
+      if (!username) {
+          toast.error('User not logged in');
+          return;
+      }
+  
+      // Send both the book and username to the API
+      await addBooktoWishSheet({ book, username }); // Ensure both are sent
+  };
+
+  const addBooktoWishSheet = async ({ book, username }) => {
+    try {
         const response = await fetch('/api/addBookWish', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ book }),
+            body: JSON.stringify({ book, username }), // Correctly include both
         });
 
         if (!response.ok) {
@@ -67,21 +83,21 @@ const BookSearch = () => {
         }
 
         const data = await response.json();
-        toast.success(setMessage(data.message || 'Book added to Google Sheets successfully!'));
+        toast.success(data.message || 'Book added to Google Sheets successfully!');
     } catch (error) {
         console.error('Error adding book:', error);
-        toast.error(setMessage('Failed to add book to Google Sheets.'));
+        toast.error('Failed to add book to Google Sheets.');
     }
-    }
+};
 
-    const addBookToSheet = async (book) => {
+    const addBookToSheet = async ({ book, username}) => {
         try {
             const response = await fetch('/api/addBook', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ book }),
+                body: JSON.stringify({ book, username }),
             });
 
             if (!response.ok) {
@@ -89,10 +105,10 @@ const BookSearch = () => {
             }
 
             const data = await response.json();
-            toast.success(setMessage(data.message || 'Book added to Google Sheets successfully!'));
+            toast.success(data.message || 'Book added to Google Sheets successfully!');
         } catch (error) {
             console.error('Error adding book:', error);
-            toast.error(setMessage('Failed to add book to Google Sheets.'));
+            toast.error('Failed to add book to Google Sheets.');
         }
     };
 

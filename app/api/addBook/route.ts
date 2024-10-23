@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
 export const POST = async (request: Request) => {
-    const { book } = await request.json();
+    const { book, username } = await request.json();
 
-    if (!book) {
-        return NextResponse.json({ message: 'Book data is required' }, { status: 400 });
+    console.log('Received book data:', book);
+    console.log('Received username:', username);
+
+    if (!book || !username) {
+        return NextResponse.json({ message: 'Book data and username are required' }, { status: 400 });
     }
 
     const { PRIVATEKEY, CLIENTEMAIL, SHEET_ID } = process.env;
@@ -28,6 +31,7 @@ export const POST = async (request: Request) => {
             book.volumeInfo.pageCount,
             book.volumeInfo.categories?.join(', '),
             book.id,
+            username,
         ],
     ];
 
@@ -40,7 +44,7 @@ export const POST = async (request: Request) => {
             spreadsheetId: SHEET_ID as string,
             range,
             valueInputOption,
-            requestBody: resource, // Use requestBody instead of resource
+            requestBody: resource,
         });
 
         return NextResponse.json({ message: 'Book added successfully!', response });

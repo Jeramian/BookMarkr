@@ -1,31 +1,41 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
 const BookShelf = () => {
     const [shelf, setShelf] = useState([]);
     const [message, setMessage] = useState(null);
+    const [username, setUsername] = useState(null);
+    const router = useRouter();
 
     useEffect(() => {
-        const fetchBooks = async () => {
-            try {
-                const response = await fetch('/api/getBooks');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch books');
-                }
-                const data = await response.json();
-                setShelf(data.books || []);
-            } catch (error) {
-                console.error('Error fetching books:', error);
-                toast.error(setMessage('Failed to load books.'));
-            }
-        };
+        // Check if user is logged in
+        const user = localStorage.getItem('user');
+        if (!user) {
+            router.push('/login'); // Redirect to login if not authenticated
+        } else {
+            const userData = JSON.parse(user); // Parse the user data
+            setUsername(userData.username); // Set the username
+            fetchBooks(userData.username); // Fetch books for the specific user
+        }
+    }, [router]);
 
-        fetchBooks();
-    }, []);
+    const fetchBooks = async (username) => {
+        try {
+            const response = await fetch(`/api/getBooks?username=${username}`); // Fetch using the username
+            if (!response.ok) {
+                throw new Error('Failed to fetch books');
+            }
+            const data = await response.json();
+            setShelf(data.books || []); // Set shelf to the filtered books
+        } catch (error) {
+            console.error('Error fetching books:', error);
+            toast.error('Failed to load books.');
+        }
+    };
 
     const removeBookFromSheet = async (bookId) => {
-        // Optimistically update the UI first
         const updatedShelf = shelf.filter(book => book.id !== bookId);
         setShelf(updatedShelf);
         localStorage.setItem('bookshelfData', JSON.stringify(updatedShelf));
@@ -47,16 +57,15 @@ const BookShelf = () => {
             toast.success(data.message || 'Book removed!');
         } catch (error) {
             console.error('Error removing book:', error);
-            // If the removal failed, add the book back to the shelf
-            setShelf(prevShelf => [...prevShelf, shelf.find(book => book.id === bookId)]);
+            setShelf(prevShelf => [...prevShelf, shelf.find(book => book.id === bookId)]); // Restore book
             localStorage.setItem('bookshelfData', JSON.stringify(shelf)); // Restore local storage
-            toast.error(setMessage('Failed to remove book from the sheet. Restored to shelf.'));
+            toast.error('Failed to remove book from the sheet. Restored to shelf.');
         }
     };
 
     return (
         <div className="container mx-auto px-4">
-            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>Caitlin&apos;s Book Shelf</h2>
+            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>{username}'s Book Shelf</h2>
             {message && (
                 <div className="text-center mt-4">
                     <p className="text-red-500">{message}</p>
