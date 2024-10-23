@@ -68,7 +68,7 @@ const WishList = () => {
 
     return (
         <div className="container mx-auto px-4">
-            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>{username}'s Wish List</h2>
+            <h2 className='text-center pt-5 text-2xl font-bold text-gray-800'>{username}&apos;s Wish List</h2>
             {message && (
                 <div className="text-center mt-4">
                     <p className="text-red-500">{message}</p>
