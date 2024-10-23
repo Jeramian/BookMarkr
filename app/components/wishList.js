@@ -42,7 +42,7 @@ const WishList = () => {
         localStorage.setItem('wishlistData', JSON.stringify(updatedShelf));
 
         try {
-            const response = await fetch('/api/removeBookWish', {
+            const response = await fetch('/api/removeBookWIsh', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BookSearch from './components/BookSearch';
-import TotalPagesCount from './components/totalPages'; // Ensure correct case
-import TotalBooks from './components/totalBooks'; // Ensure correct case
+import TotalPagesCount from './components/TotalPagesCount'; // Ensure correct case
+import TotalBooks from './components/TotalBooks'; // Ensure correct case
 
 interface Book {
     id: string;
